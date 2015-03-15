@@ -1,9 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 ## Introduction
 
@@ -27,24 +22,17 @@ and include the number of steps taken in 5 minute intervals each day.
 
 ## Loading and preprocessing the data
 
-```{r load_packages, echo=TRUE, results="hide",message=FALSE}
+
+```r
 library(dplyr)
 library(lubridate)
 library(stringr)
 library(ggplot2)
 ```
 
-```{r format_function, echo=FALSE, results="hide",message=FALSE}
-format_interval <- function(interval, sep=":") {
-    a <- str_pad(interval, 4, pad="0")
-    a <- gsub('^(.{2})(.*)$', '\\1:\\2', a)
-    a
-}
-```
 
-```{r setoptions, echo=FALSE}
-    knitr::opts_chunk$set(fig.path="figure/")
-```
+
+
 
 The data is available in the github repository as activity.zip. 
 
@@ -53,7 +41,8 @@ The data is available in the github repository as activity.zip.
  - Convert ```date``` column to date format.
  - The ```interval``` column contains the interval expressed in increment of 5 minutes, create a new column ```full_date``` by concatenating date and interval to have the date and time of the measurement.
 
-```{r readFile}
+
+```r
 activity <- read.table(unzip("activity.zip"), sep = ",", header=TRUE, 
                        na.strings = 'NA', stringsAsFactors=FALSE)
 
@@ -64,6 +53,14 @@ activity <- activity %>%
     mutate(date = ymd(date))
 
 str(activity)
+```
+
+```
+## 'data.frame':	17568 obs. of  4 variables:
+##  $ steps    : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date     : POSIXct, format: "2012-10-01" "2012-10-01" ...
+##  $ interval : int  0 5 10 15 20 25 30 35 40 45 ...
+##  $ full_date: POSIXct, format: "2012-10-01 00:00:00" "2012-10-01 00:05:00" ...
 ```
 
 *Conventioned used for naming variables*:
@@ -78,7 +75,8 @@ Statistics are calculate using daily average or interval average.
 
 Group all measurement per day and calulate the total number of steps per day.
 
-```{r daily_total_per_day, results='markup'}
+
+```r
 act_daily <- activity %>%
     group_by(date) %>%
     summarize(daily_total = sum(steps),
@@ -87,26 +85,10 @@ act_daily <- activity %>%
 ```
 
 
-```{r plot_mean_per_day, echo=FALSE}
-ggplot(act_daily, aes(x=daily_total)) + 
-    geom_histogram(binwidth=2000, colour="black", fill="white") + 
-    geom_vline(aes(xintercept = mean(daily_total, na.rm = TRUE)),
-                  linetype="dashed", size=1, colour= "red") +
-    geom_vline(aes(xintercept = median(daily_total, na.rm = TRUE)),
-                  linetype="dashed", size=1, colour= "blue") +
-    geom_text(aes(x=mean(daily_total, na.rm = TRUE), y=15, label="mean"),hjust=1.2) +
-    geom_text(aes(x=median(daily_total, na.rm = TRUE), y=15, label="median"),hjust=-0.2) +
-    xlab("Total steps per day")+
-    ylab("Count") +
-    ggtitle("Distribution of daily activity") +
-    theme_bw()
+![](figure/plot_mean_per_day-1.png) 
 
 
-mean_act_daily <- as.integer(round(mean(act_daily$daily_total, na.rm = TRUE), digits = 0))
-```
-
-
-The mean number of steps per day is **`r mean_act_daily`** and the median **`r median(act_daily$daily_total, na.rm = TRUE)`**. The two values are practivally equal.
+The mean number of steps per day is **10766** and the median **10765**. The two values are practivally equal.
 
 
 ## What is the average daily activity pattern?
@@ -116,7 +98,8 @@ Average of the activity pattern across all available days.
 Summarize standard deviation, standard error and approcimation of 95% confidence interval for each measurement.
 
 
-```{r daily_act_time, results='markup'}
+
+```r
 act_time <- activity %>%
     group_by(interval) %>%
     summarize(n=n(),
@@ -126,27 +109,14 @@ act_time <- activity %>%
     mutate(   steps_se = steps_sd/sqrt(n),            # standard error
               lci = steps_mean+qnorm(0.025)*steps_se, # lower confidence index
               uci = steps_mean+qnorm(0.975)*steps_se)
-
 ```
 
-```{r plot_act_time, echo=FALSE}
-
-ggplot(act_time, aes(x=interval, y=steps_mean)) + 
-    geom_line() +
-    geom_point(size=2, shape=21, fill="white") + 
-    xlab("Time of 5 min interval (hours)") +
-    ylab("Average number of steps") +
-    ggtitle("Average daily activity pattern") +
-    theme_bw()
-```
+![](figure/plot_act_time-1.png) 
 
 
-```{r max_daily_activity, echo=FALSE}
-max_interval <- act_time[act_time$steps_mean == max(act_time$steps_mean),]$interval
-max_activity_time <- format_interval(max_interval)
-```
 
-On average, the maximum number of steps is taken during the **`r max_activity_time`** 5 minutes interval .
+
+On average, the maximum number of steps is taken during the **08:35** 5 minutes interval .
 
 
 
@@ -155,9 +125,10 @@ On average, the maximum number of steps is taken during the **`r max_activity_ti
 
 There are a number of days/intervals where there are missing values (coded as NA). The presence of missing days may introduce bias into some calculations or summaries of the data.
 
-The activity dataset has `r dim(activity)[1]` observations, containing **`r sum(is.na(activity$steps))`** missing values. In the new dataset ```nm_activity``` missing values are imputed by using the median for that interval across all daily measures.
+The activity dataset has 17568 observations, containing **2304** missing values. In the new dataset ```nm_activity``` missing values are imputed by using the median for that interval across all daily measures.
 
-```{r impute_missing}
+
+```r
 nm_activity <- activity %>%
     mutate(steps = 
                ifelse(is.na(steps), 
@@ -171,33 +142,9 @@ nm_act_daily <- nm_activity %>%
 ```
 
 
-```{r plot_total, echo=FALSE}
+![](figure/plot_total-1.png) 
 
-
-act_daily_all <- bind_rows(mutate(act_daily,impute="Impute missing: NO"), mutate(nm_act_daily, impute="Impute missing: YES"))
-cact <- act_daily_all %>%
-    group_by(impute) %>%
-    summarise(s_mean = mean(daily_total, na.rm=T),
-              s_median = median(daily_total, na.rm=T))
-    
-
-ggplot(act_daily_all, aes(x=daily_total)) + 
-    geom_histogram(binwidth=2000, colour="black", fill="white") + 
-    facet_grid(impute ~ .) +
-    geom_vline(data = cact, aes(xintercept = s_mean),
-                  linetype="dashed", size=1, colour= "red") +
-    geom_vline(data = cact, aes(xintercept=s_median),
-                   linetype="dashed", size=1, colour="blue", text="median")+
-    geom_text(data = cact, aes(x=s_mean, y=15, label="mean"),hjust=1.2) +
-    geom_text(data = cact, aes(x=s_median, y=15, label="median"),hjust=-0.2) +
-    xlab("Total steps per day")+
-    ylab("Count") +
-    ggtitle("Distribution of daily activity") +
-    theme_bw()
-
-```
-
-With the imputed values the mean number of steps per day is `r round(mean(nm_act_daily$daily_total), digits = 0)` and the median `r median(nm_act_daily$daily_total, na.rm = TRUE)`. The two values are no longer equals and the mean has varied by `r -(100- round(100*(mean(nm_act_daily$daily_total)/mean(act_daily$daily_total, na.rm = TRUE)), digits = 1)) `% and the median by `r -(100- round(100*(median(nm_act_daily$daily_total)/median(act_daily$daily_total, na.rm = TRUE)), digits = 1)) `% when compared to the original dataset.
+With the imputed values the mean number of steps per day is 9504 and the median 10395. The two values are no longer equals and the mean has varied by -11.7% and the median by -3.4% when compared to the original dataset.
 
 
 
@@ -205,7 +152,8 @@ With the imputed values the mean number of steps per day is `r round(mean(nm_act
 
 Using the dataset with filled-in missing values a new factor variable weekday/weekend is created, allowing the comparison of average activity pattern through the day between weekend and weekdays.
 
-```{r weekend_activity, echo=TRUE}
+
+```r
 nm_activity <- nm_activity %>%
     mutate(day = wday(date),
            weekend = ifelse(day==1 | day==7, "weekend", "weekday"))
@@ -215,18 +163,7 @@ nm_act_time <- nm_activity %>%
     summarize(steps_mean = mean(steps))
 ```
 
-```{r plot_nm_act_time, echo=FALSE}
-
-p<- qplot(interval, steps_mean, data = nm_act_time,
-      facets = weekend ~.,
-      ylab = "average number of steps", 
-      xlab = "time of measurement",
-      main = "Average daily activity pattern.",
-      geom = c("point", "line"))
-
-p+theme_bw()
-      
-```
+![](figure/plot_nm_act_time-1.png) 
 
 
 During the week, there is a peak of activity around 8h30, and a small pead at the end of the working day, during the day there is little activity. While during weekends, the peak around 8am is not as pronounced and there is a more constant activity throughout the day.
